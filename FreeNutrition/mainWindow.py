@@ -5,10 +5,45 @@
 # Created by: PyQt5 UI code generator 5.5.1
 #
 # WARNING! All changes made in this file will be lost!
+#
+# rawInput = queryLineEdit.string
+# queryBase = 'SELECT Shrt_Desc FROM food_des WHERE '
+# likeClause = 'Shrt_Desc LIKE %{}%'
+# clauseList = [likeClause.format(i) for i in rawInput.split()]
+# userQuery = queryBase + '(' + ' AND '.join(clauseList) + ');'
+
 
 from PyQt5 import QtCore, QtGui, QtWidgets
+import sqlite3
 
 class Ui_MainWindow(object):
+    # connect to sr28 database
+    def loadData(self, rawInput):
+        connection = sqlite3.connect('../database/sr28.db')
+        connection.text_factory = str
+        #query = 'SELECT Shrt_Desc FROM food_des'
+        #result = connection.execute(query)
+        
+        rawInput = self.queryLineEdit.text()
+        
+        if len(rawInput) == 0:
+            return
+    
+        queryBase = 'SELECT Shrt_Desc FROM food_des WHERE '
+        likeClause = 'Long_Desc LIKE \'%{}%\''
+        clauseList = [likeClause.format(i) for i in rawInput.split()]
+        userQuery = queryBase + '(' + ' AND '.join(clauseList) + ');'
+
+        result = connection.execute(userQuery)
+
+        self.resultTableWidget.setRowCount(0)
+        for row_number, row_data in enumerate(result):
+            self.resultTableWidget.insertRow(row_number)
+            for col_number, data in enumerate(row_data):
+                self.resultTableWidget.setItem(row_number, col_number, QtWidgets.QTableWidgetItem(str(data))) 
+
+        connection.close()
+
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1246, 647)
@@ -43,7 +78,7 @@ class Ui_MainWindow(object):
         self.resultTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.resultTableWidget.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
         self.resultTableWidget.setObjectName("resultTableWidget")
-        self.resultTableWidget.setColumnCount(3)
+        self.resultTableWidget.setColumnCount(1)
         self.resultTableWidget.setRowCount(0)
         item = QtWidgets.QTableWidgetItem()
         self.resultTableWidget.setHorizontalHeaderItem(0, item)
@@ -167,6 +202,16 @@ class Ui_MainWindow(object):
         self.actionExit.triggered.connect(MainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
 
+        # upon user entry into queryLineEdit, search database for user strings
+        self.queryLineEdit.textChanged.connect(self.loadData)
+
+        # disable table editability 
+        self.resultTableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
+
+        # resize column
+        self.resultTableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+        self.recordedFoodTableWidget.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
+
     def retranslateUi(self, MainWindow):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
@@ -174,10 +219,6 @@ class Ui_MainWindow(object):
         self.resultTableWidget.setSortingEnabled(True)
         item = self.resultTableWidget.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Food Name"))
-        item = self.resultTableWidget.horizontalHeaderItem(1)
-        item.setText(_translate("MainWindow", "Description"))
-        item = self.resultTableWidget.horizontalHeaderItem(2)
-        item.setText(_translate("MainWindow", "Food Group"))
         self.label.setText(_translate("MainWindow", "Daily Food Record:"))
         self.removeFoodPushButton.setText(_translate("MainWindow", "Add Food"))
         self.addFoodPushButton.setText(_translate("MainWindow", "Remove Food "))
