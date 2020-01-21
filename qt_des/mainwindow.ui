@@ -16,78 +16,6 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <layout class="QVBoxLayout" name="queryLayout">
-      <item>
-       <widget class="QLabel" name="foodQuerylabel">
-        <property name="font">
-         <font>
-          <pointsize>12</pointsize>
-          <weight>75</weight>
-          <bold>true</bold>
-         </font>
-        </property>
-        <property name="text">
-         <string>Search for Foods:</string>
-        </property>
-       </widget>
-      </item>
-      <item>
-       <layout class="QHBoxLayout" name="queryInputLayout">
-        <item>
-         <widget class="QLineEdit" name="queryLineEdit"/>
-        </item>
-        <item>
-         <widget class="QComboBox" name="foodGroupComboBox">
-          <property name="enabled">
-           <bool>true</bool>
-          </property>
-          <property name="minimumSize">
-           <size>
-            <width>50</width>
-            <height>0</height>
-           </size>
-          </property>
-          <property name="editable">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </item>
-      <item>
-       <widget class="QTableWidget" name="resultTableWidget">
-        <property name="selectionMode">
-         <enum>QAbstractItemView::SingleSelection</enum>
-        </property>
-        <property name="selectionBehavior">
-         <enum>QAbstractItemView::SelectRows</enum>
-        </property>
-        <property name="verticalScrollMode">
-         <enum>QAbstractItemView::ScrollPerItem</enum>
-        </property>
-        <property name="sortingEnabled">
-         <bool>true</bool>
-        </property>
-        <column>
-         <property name="text">
-          <string>Food Name</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Description</string>
-         </property>
-        </column>
-        <column>
-         <property name="text">
-          <string>Food Group</string>
-         </property>
-        </column>
-       </widget>
-      </item>
-     </layout>
-    </item>
-    <item>
      <layout class="QVBoxLayout" name="foodRecordLayout">
       <item>
        <widget class="QLabel" name="label">
@@ -160,15 +88,12 @@
          </font>
         </property>
         <property name="text">
-         <string>Date of Consumption:</string>
+         <string>Date :</string>
         </property>
        </widget>
       </item>
       <item>
        <widget class="QCalendarWidget" name="foodCalendarWidget"/>
-      </item>
-      <item>
-       <widget class="QTimeEdit" name="foodTimeEdit"/>
       </item>
      </layout>
     </item>
@@ -242,7 +167,7 @@
      <x>0</x>
      <y>0</y>
      <width>1246</width>
-     <height>19</height>
+     <height>23</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
