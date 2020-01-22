@@ -10,11 +10,12 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 import sqlite3
 
 class Ui_ingredientQuantityDialog(object):
+
     # load FdGrp_Desc
     def loadFdGrp(self):
 	connection = sqlite3.connect('../database/sr28.db')
 	connection.text_factory = str
-	query = 'SELECT FdGrp_Desc, FdGrp_Cd FROM fd_group'
+	query = 'SELECT FdGrp_Desc, FdGrp_Cd FROM fd_group;'
 	result = connection.execute(query)
 
 	result = [(FdGrp_Desc[1:-1], FdGrp_Cd) for FdGrp_Desc, FdGrp_Cd in result]
@@ -23,7 +24,7 @@ class Ui_ingredientQuantityDialog(object):
         connection.close()
 
 	self.foodGroupComboBox.addItems(self.FdGrpDict.keys())
-    
+
     # connect to sr28 database
     def loadData(self):
         connection = sqlite3.connect('../database/sr28.db')
@@ -31,13 +32,13 @@ class Ui_ingredientQuantityDialog(object):
         #query = 'SELECT Shrt_Desc FROM food_des'
         #result = connection.execute(query)
         
-        rawInput = self.queryLineEdit.text()
+        rawInput = self.queryLineEdit.text().strip()
 	FdGrp_Desc = str(self.foodGroupComboBox.currentText())
         
         if len(rawInput) == 0:
             return
     
-        queryBase = 'SELECT Shrt_Desc FROM food_des WHERE '
+        queryBase = 'SELECT Long_Desc,NDB_No FROM food_des WHERE '
         likeClause = 'Long_Desc LIKE \'%{}%\''
         clauseList = [likeClause.format(i) for i in rawInput.split()]
 	FdGrpFilter = 'FdGrp_Cd == \'{}\' AND '.format(self.FdGrpDict[FdGrp_Desc])
@@ -48,12 +49,40 @@ class Ui_ingredientQuantityDialog(object):
 
         result = connection.execute(userQuery)
 
+        # Save NDB_No for mapping to other tables in sr28.db
+        # Long_Desc = key, NDB_No = value
+        self.foodDesBuffer = [] 
+
         self.resultTableWidget.setRowCount(0)
         for row_number, row_data in enumerate(result):
             self.resultTableWidget.insertRow(row_number)
-            for col_number, data in enumerate(row_data):
-                self.resultTableWidget.setItem(row_number, col_number, QtWidgets.QTableWidgetItem(str(data))) 
+            
+            self.resultTableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(row_data[0][1:-1]))
+            
+            self.foodDesBuffer.append(row_data[1])
 
+        connection.close()
+
+    # list available measurements of selected row in resultTableWidget
+    # pull rows from weight table where NDB_No matches.
+    # send available measurements to unitComboBox.
+    # test for cases where NDB_No is not found in weight table.
+
+    def getWeights(self):
+        self.currentNDB_No = self.foodDesBuffer[ self.resultTableWidget.currentRow() ]
+
+        connection = sqlite3.connect('../database/sr28.db')
+        connection.text_factory = str
+
+        query = 'SELECT  Msre_Desc, Gm_Wgt FROM weight WHERE NDB_No == \'{}\';'
+        result  = connection.execute(query.format(self.currentNDB_No))
+
+        measureList = []
+        for i in result:
+            measureList.append(i)
+        if len(measureList) == 0:
+            print(self.currentNDB_No)
+        
         connection.close()
 
 
@@ -150,6 +179,9 @@ class Ui_ingredientQuantityDialog(object):
 	# upon user entry into foodGroupComboBox, filter database for FdGroup_Cd
 	self.loadFdGrp()
 
+        # upon user selection of item in resultTableWidget, record the selection.
+        self.resultTableWidget.itemSelectionChanged.connect(self.getWeights)
+
         # disable table editability 
         self.resultTableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
 
@@ -159,7 +191,7 @@ class Ui_ingredientQuantityDialog(object):
         _translate = QtCore.QCoreApplication.translate
         ingredientQuantityDialog.setWindowTitle(_translate("ingredientQuantityDialog", "Dialog"))
         self.foodQuerylabel.setText(_translate("ingredientQuantityDialog", "Search for Foods:"))
-        self.resultTableWidget.setSortingEnabled(True)
+        self.resultTableWidget.setSortingEnabled(False)
         item = self.resultTableWidget.horizontalHeaderItem(0)
         item.setText(_translate("ingredientQuantityDialog", "Food Name"))
         self.timeLabel.setText(_translate("ingredientQuantityDialog", "Time of Consumption:"))
