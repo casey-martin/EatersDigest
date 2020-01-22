@@ -23,7 +23,7 @@ class Ui_ingredientQuantityDialog(object):
         self.FdGrpDict[''] = ''
         connection.close()
 
-        self.foodGroupComboBox.addItems(self.FdGrpDict.keys())
+        self.foodGroupComboBox.addItems(sorted(self.FdGrpDict.keys()))
 
     # connect to sr28 database
     def loadData(self):
@@ -67,25 +67,34 @@ class Ui_ingredientQuantityDialog(object):
     # pull rows from weight table where NDB_No matches.
     # send available measurements to unitComboBox.
     # test for cases where NDB_No is not found in weight table.
-
     def getWeights(self):
-        self.currentNDB_No = self.foodDesBuffer[ self.resultTableWidget.currentRow() ]
+
+        self.unitComboBox.clear()
+
+        try:
+            self.currentNDB_No = self.foodDesBuffer[ self.resultTableWidget.currentRow() ]
+        except:
+            # print(self.foodDesBuffer, self.resultTableWidget.currentRow())
+            return
 
         connection = sqlite3.connect('../database/sr28.db')
         connection.text_factory = str
 
-        query = 'SELECT  Msre_Desc, Gm_Wgt FROM weight WHERE NDB_No == \'{}\';'
+        query = 'SELECT  Msre_Desc FROM weight WHERE NDB_No == \'{}\';'
         result  = connection.execute(query.format(self.currentNDB_No))
 
         measureList = []
         for i in result:
-            measureList.append(i)
+            measureList.append(i[0][1:-1])
         if len(measureList) == 0:
             print(self.currentNDB_No)
         
         connection.close()
-
-
+        if len(measureList) == 0:
+            self.unitComboBox.addItems(['oz (weight)', 'gram', 'cup', 'tsp', 'tbsp', 'serving'])
+        else:
+            self.unitComboBox.addItems(measureList)
+        
     def setupUi(self, ingredientQuantityDialog):
         ingredientQuantityDialog.setObjectName("ingredientQuantityDialog")
         ingredientQuantityDialog.resize(1002, 533)
