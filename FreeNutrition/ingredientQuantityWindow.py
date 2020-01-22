@@ -71,7 +71,7 @@ class Ui_ingredientQuantityDialog(object):
 
         connection.close()
 
-   def getWeights(self):
+    def getWeights(self):
         '''list available measurements of selected row in resultTableWidget
         pull rows from weight table where NDB_No matches.
         send available measurements to unitComboBox.
