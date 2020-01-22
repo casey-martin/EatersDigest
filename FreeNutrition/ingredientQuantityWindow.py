@@ -27,21 +27,29 @@ class Ui_ingredientQuantityDialog(object):
 
     # connect to sr28 database
     def loadData(self):
+        '''sr28 query is executed upon changed character string in queryLineEdit.
+        Searches the Long_Desc column for each space delimited string in queryLineEdit.
+        Implemented a hacky work around using like clauses as sqlite3 does not have a
+        REGEXP function.'''
+
+        # do not query if search box is devoid of non whitespace characters.
+        if len(self.queryLineEdit.text().strip()) == 0:
+            return
+
         connection = sqlite3.connect('../database/sr28.db')
         connection.text_factory = str
-        #query = 'SELECT Shrt_Desc FROM food_des'
-        #result = connection.execute(query)
         
         rawInput = self.queryLineEdit.text().strip()
         FdGrp_Desc = str(self.foodGroupComboBox.currentText())
         
-        if len(rawInput) == 0:
-            return
-    
         queryBase = 'SELECT Long_Desc,NDB_No FROM food_des WHERE '
         likeClause = 'Long_Desc LIKE \'%{}%\''
         clauseList = [likeClause.format(i) for i in rawInput.split()]
+
+        # filter by food group
         FdGrpFilter = 'FdGrp_Cd == \'{}\' AND '.format(self.FdGrpDict[FdGrp_Desc])
+
+        # omit query food group condition if foodGroupCombo box is empty.
         if len(FdGrp_Desc) != 0:
             userQuery = queryBase + '(' + FdGrpFilter  + ' AND '.join(clauseList) + ');'
         else:
@@ -63,14 +71,15 @@ class Ui_ingredientQuantityDialog(object):
 
         connection.close()
 
-    # list available measurements of selected row in resultTableWidget
-    # pull rows from weight table where NDB_No matches.
-    # send available measurements to unitComboBox.
-    # test for cases where NDB_No is not found in weight table.
-    def getWeights(self):
-
+   def getWeights(self):
+        '''list available measurements of selected row in resultTableWidget
+        pull rows from weight table where NDB_No matches.
+        send available measurements to unitComboBox.
+        test for cases where NDB_No is not found in weight table.'''
+ 
         self.unitComboBox.clear()
-
+        
+        # ugly. should build in innate behaviorial fix rather than error catching.
         try:
             self.currentNDB_No = self.foodDesBuffer[ self.resultTableWidget.currentRow() ]
         except:
