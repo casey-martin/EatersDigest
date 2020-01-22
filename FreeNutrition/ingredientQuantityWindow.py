@@ -13,17 +13,17 @@ class Ui_ingredientQuantityDialog(object):
 
     # load FdGrp_Desc
     def loadFdGrp(self):
-	connection = sqlite3.connect('../database/sr28.db')
-	connection.text_factory = str
-	query = 'SELECT FdGrp_Desc, FdGrp_Cd FROM fd_group;'
-	result = connection.execute(query)
+        connection = sqlite3.connect('../database/sr28.db')
+        connection.text_factory = str
+        query = 'SELECT FdGrp_Desc, FdGrp_Cd FROM fd_group;'
+        result = connection.execute(query)
 
-	result = [(FdGrp_Desc[1:-1], FdGrp_Cd) for FdGrp_Desc, FdGrp_Cd in result]
-        self.FdGrpDict = dict(result) 	
-	self.FdGrpDict[''] = ''
+        result = [(FdGrp_Desc[1:-1], FdGrp_Cd) for FdGrp_Desc, FdGrp_Cd in result]
+        self.FdGrpDict = dict(result)     
+        self.FdGrpDict[''] = ''
         connection.close()
 
-	self.foodGroupComboBox.addItems(self.FdGrpDict.keys())
+        self.foodGroupComboBox.addItems(self.FdGrpDict.keys())
 
     # connect to sr28 database
     def loadData(self):
@@ -33,7 +33,7 @@ class Ui_ingredientQuantityDialog(object):
         #result = connection.execute(query)
         
         rawInput = self.queryLineEdit.text().strip()
-	FdGrp_Desc = str(self.foodGroupComboBox.currentText())
+        FdGrp_Desc = str(self.foodGroupComboBox.currentText())
         
         if len(rawInput) == 0:
             return
@@ -41,11 +41,11 @@ class Ui_ingredientQuantityDialog(object):
         queryBase = 'SELECT Long_Desc,NDB_No FROM food_des WHERE '
         likeClause = 'Long_Desc LIKE \'%{}%\''
         clauseList = [likeClause.format(i) for i in rawInput.split()]
-	FdGrpFilter = 'FdGrp_Cd == \'{}\' AND '.format(self.FdGrpDict[FdGrp_Desc])
-	if len(FdGrp_Desc) != 0:
-		userQuery = queryBase + '(' + FdGrpFilter  + ' AND '.join(clauseList) + ');'
-	else:
-	        userQuery = queryBase + '(' + ' AND '.join(clauseList) + ');'
+        FdGrpFilter = 'FdGrp_Cd == \'{}\' AND '.format(self.FdGrpDict[FdGrp_Desc])
+        if len(FdGrp_Desc) != 0:
+            userQuery = queryBase + '(' + FdGrpFilter  + ' AND '.join(clauseList) + ');'
+        else:
+            userQuery = queryBase + '(' + ' AND '.join(clauseList) + ');'
 
         result = connection.execute(userQuery)
 
@@ -176,8 +176,8 @@ class Ui_ingredientQuantityDialog(object):
         # upon user entry into queryLineEdit, search database for user strings
         self.queryLineEdit.textChanged.connect(self.loadData)
 
-	# upon user entry into foodGroupComboBox, filter database for FdGroup_Cd
-	self.loadFdGrp()
+        # upon user entry into foodGroupComboBox, filter database for FdGroup_Cd
+        self.loadFdGrp()
 
         # upon user selection of item in resultTableWidget, record the selection.
         self.resultTableWidget.itemSelectionChanged.connect(self.getWeights)
