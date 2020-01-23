@@ -51,6 +51,18 @@
       </item>
       <item>
        <widget class="QTableWidget" name="recordedFoodTableWidget">
+        <property name="sizeAdjustPolicy">
+         <enum>QAbstractScrollArea::AdjustIgnored</enum>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectRows</enum>
+        </property>
+        <attribute name="horizontalHeaderStretchLastSection">
+         <bool>true</bool>
+        </attribute>
         <column>
          <property name="text">
           <string>Time</string>
@@ -143,18 +155,10 @@
        </widget>
       </item>
       <item>
-       <widget class="QTreeWidget" name="recipeTreeWidget">
+       <widget class="QListWidget" name="recipeListWidget">
         <property name="acceptDrops">
          <bool>false</bool>
         </property>
-        <property name="sortingEnabled">
-         <bool>false</bool>
-        </property>
-        <column>
-         <property name="text">
-          <string notr="true">1</string>
-         </property>
-        </column>
        </widget>
       </item>
      </layout>
@@ -167,7 +171,7 @@
      <x>0</x>
      <y>0</y>
      <width>1246</width>
-     <height>23</height>
+     <height>19</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
