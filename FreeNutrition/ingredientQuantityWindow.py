@@ -1,109 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'ingredientQuantityWindow.ui'
+# Form implementation generated from reading ui file 'qt_des_ui/ingredientQuantityWindow.ui'
 #
-# Created by: PyQt5 UI code generator 5.6
+# Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
+
 from PyQt5 import QtCore, QtGui, QtWidgets
-import sqlite3
+
 
 class Ui_ingredientQuantityDialog(object):
-
-    # load FdGrp_Desc
-    def loadFdGrp(self):
-        connection = sqlite3.connect('../database/sr28.db')
-        connection.text_factory = str
-        query = 'SELECT FdGrp_Desc, FdGrp_Cd FROM fd_group;'
-        result = connection.execute(query)
-
-        result = [(FdGrp_Desc[1:-1], FdGrp_Cd) for FdGrp_Desc, FdGrp_Cd in result]
-        self.FdGrpDict = dict(result)     
-        self.FdGrpDict[''] = ''
-        connection.close()
-
-        self.foodGroupComboBox.addItems(sorted(self.FdGrpDict.keys()))
-
-    # connect to sr28 database
-    def loadData(self):
-        '''sr28 query is executed upon changed character string in queryLineEdit.
-        Searches the Long_Desc column for each space delimited string in queryLineEdit.
-        Implemented a hacky work around using like clauses as sqlite3 does not have a
-        REGEXP function.'''
-
-        # do not query if search box is devoid of non whitespace characters.
-        if len(self.queryLineEdit.text().strip()) == 0:
-            return
-
-        connection = sqlite3.connect('../database/sr28.db')
-        connection.text_factory = str
-        
-        rawInput = self.queryLineEdit.text().strip()
-        FdGrp_Desc = str(self.foodGroupComboBox.currentText())
-        
-        queryBase = 'SELECT Long_Desc,NDB_No FROM food_des WHERE '
-        likeClause = 'Long_Desc LIKE \'%{}%\''
-        clauseList = [likeClause.format(i) for i in rawInput.split()]
-
-        # filter by food group
-        FdGrpFilter = 'FdGrp_Cd == \'{}\' AND '.format(self.FdGrpDict[FdGrp_Desc])
-
-        # omit query food group condition if foodGroupCombo box is empty.
-        if len(FdGrp_Desc) != 0:
-            userQuery = queryBase + '(' + FdGrpFilter  + ' AND '.join(clauseList) + ');'
-        else:
-            userQuery = queryBase + '(' + ' AND '.join(clauseList) + ');'
-
-        result = connection.execute(userQuery)
-
-        # Save NDB_No for mapping to other tables in sr28.db
-        # Long_Desc = key, NDB_No = value
-        self.foodDesBuffer = [] 
-
-        self.resultTableWidget.setRowCount(0)
-        for row_number, row_data in enumerate(result):
-            self.resultTableWidget.insertRow(row_number)
-            
-            self.resultTableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(row_data[0][1:-1]))
-            
-            self.foodDesBuffer.append(row_data[1])
-
-        connection.close()
-
-    def getWeights(self):
-        '''list available measurements of selected row in resultTableWidget
-        pull rows from weight table where NDB_No matches.
-        send available measurements to unitComboBox.
-        test for cases where NDB_No is not found in weight table.'''
- 
-        self.unitComboBox.clear()
-        
-        # ugly. should build in innate behaviorial fix rather than error catching.
-        try:
-            self.currentNDB_No = self.foodDesBuffer[ self.resultTableWidget.currentRow() ]
-        except:
-            # print(self.foodDesBuffer, self.resultTableWidget.currentRow())
-            return
-
-        connection = sqlite3.connect('../database/sr28.db')
-        connection.text_factory = str
-
-        query = 'SELECT  Msre_Desc FROM weight WHERE NDB_No == \'{}\';'
-        result  = connection.execute(query.format(self.currentNDB_No))
-
-        measureList = []
-        for i in result:
-            measureList.append(i[0][1:-1])
-        if len(measureList) == 0:
-            print(self.currentNDB_No)
-        
-        connection.close()
-        if len(measureList) == 0:
-            self.unitComboBox.addItems(['oz (weight)', 'gram', 'cup', 'tsp', 'tbsp', 'serving'])
-        else:
-            self.unitComboBox.addItems(measureList)
-        
     def setupUi(self, ingredientQuantityDialog):
         ingredientQuantityDialog.setObjectName("ingredientQuantityDialog")
         ingredientQuantityDialog.resize(1002, 533)
@@ -191,25 +98,11 @@ class Ui_ingredientQuantityDialog(object):
         self.confirmButtonBox.rejected.connect(ingredientQuantityDialog.reject)
         QtCore.QMetaObject.connectSlotsByName(ingredientQuantityDialog)
 
-        # upon user entry into queryLineEdit, search database for user strings
-        self.queryLineEdit.textChanged.connect(self.loadData)
-
-        # upon user entry into foodGroupComboBox, filter database for FdGroup_Cd
-        self.loadFdGrp()
-
-        # upon user selection of item in resultTableWidget, record the selection.
-        self.resultTableWidget.itemSelectionChanged.connect(self.getWeights)
-
-        # disable table editability 
-        self.resultTableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
-
-
-
     def retranslateUi(self, ingredientQuantityDialog):
         _translate = QtCore.QCoreApplication.translate
         ingredientQuantityDialog.setWindowTitle(_translate("ingredientQuantityDialog", "Dialog"))
         self.foodQuerylabel.setText(_translate("ingredientQuantityDialog", "Search for Foods:"))
-        self.resultTableWidget.setSortingEnabled(False)
+        self.resultTableWidget.setSortingEnabled(True)
         item = self.resultTableWidget.horizontalHeaderItem(0)
         item.setText(_translate("ingredientQuantityDialog", "Food Name"))
         self.timeLabel.setText(_translate("ingredientQuantityDialog", "Time of Consumption:"))
@@ -224,4 +117,3 @@ if __name__ == "__main__":
     ui.setupUi(ingredientQuantityDialog)
     ingredientQuantityDialog.show()
     sys.exit(app.exec_())
-

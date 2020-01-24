@@ -1,62 +1,16 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'qt_des/mainwindow.ui'
+# Form implementation generated from reading ui file 'qt_des_ui/mainwindow.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
 # WARNING! All changes made in this file will be lost!
 
-from ingredientQuantityWindow import Ui_ingredientQuantityDialog
+
 from PyQt5 import QtCore, QtGui, QtWidgets
-import sqlite3
+
 
 class Ui_MainWindow(object):
-
-    def addFoodButtonClicked(self):
-        import sys
-        app = QtWidgets.QApplication(sys.argv)
-        ingredientQuantityDialog = QtWidgets.QDialog()
-        ui = Ui_ingredientQuantityDialog()
-        ui.setupUi(ingredientQuantityDialog)
-        ingredientQuantityDialog.show()
-        ingredientQuantityDialog.exec_()
-
-
-    def loadDietHistory(self):
-        '''Queries user diet history for date displayed on foodCalendarWidget.
-        diet_history.db contains columns Date, Time, NDB_No, Quantity, Units.
-        diet_history.db will be created if none exists.'''
-        createTable = 'CREATE TABLE IF NOT EXISTS diet_history (Date TEXT, Time TEXT, NDB_No TEXT, Quantity REAL, Units TEXT);'
-        connection = sqlite3.connect('../diet_history/diet_history.db')
-        connection.execute(createTable)
-        
-        queryBase = 'SELECT * FROM diet_history WHERE Date == \'{}\''
-        queryQDate = self.foodCalendarWidget.selectedDate()
-        queryDate = queryQDate.toString('yyyy-MM-dd')
-        query = queryBase.format(queryDate) 
-        result = connection.execute(query)
-
-        self.dietHistoryBuffer = []
-
-        for row_number, row_data in enumerate(result):
-            self.recordedFoodTableWidget.insertRow(row_number)
-
-            self.resultTableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(row_data[0][1:-1]))
-
-            self.foodDesBuffer.append(row_data[1])
-
- 
-        connection.close()
-        print(queryDate)
-
-
-    def clearDietHistory(self):
-        '''Removes displayed rows in recordedFoodTableWidget'''
-
-        self.dietHistoryBuffer = []
-        self.recordedFoodTableWidget.setRowCount(0)
-
-
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
         MainWindow.resize(1246, 647)
@@ -82,7 +36,6 @@ class Ui_MainWindow(object):
         self.removeFoodPushButton = QtWidgets.QPushButton(self.centralwidget)
         self.removeFoodPushButton.setObjectName("removeFoodPushButton")
         self.horizontalLayout_2.addWidget(self.removeFoodPushButton)
- 
         self.foodRecordLayout.addLayout(self.horizontalLayout_2)
         self.recordedFoodTableWidget = QtWidgets.QTableWidget(self.centralwidget)
         self.recordedFoodTableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
@@ -175,18 +128,6 @@ class Ui_MainWindow(object):
         self.menuFile.addAction(self.actionExit)
         self.menubar.addAction(self.menuFile.menuAction())
 
-        # display today's diet history
-        self.loadDietHistory()
-
-        # on user's change of selected day, display available diet history
-        self.foodCalendarWidget.clicked.connect(self.loadDietHistory)
-
-        # on user's change of selected month, clear displayed diet history
-        self.foodCalendarWidget.currentPageChanged.connect(self.clearDietHistory)
-
-        # on Add Food call, open ingredientQuantityDialog
-        self.addFoodPushButton.clicked.connect(self.addFoodButtonClicked)
-
         self.retranslateUi(MainWindow)
         self.actionExit.triggered.connect(MainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -195,8 +136,8 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "Daily Food Record:"))
-        self.removeFoodPushButton.setText(_translate("MainWindow", "Remove Food"))
         self.addFoodPushButton.setText(_translate("MainWindow", "Add Food"))
+        self.removeFoodPushButton.setText(_translate("MainWindow", "Remove Food "))
         item = self.recordedFoodTableWidget.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Time"))
         item = self.recordedFoodTableWidget.horizontalHeaderItem(1)
