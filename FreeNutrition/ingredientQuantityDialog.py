@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# Form implementation generated from reading ui file 'qt_des_ui/ingredientQuantityWindow.ui'
+# Form implementation generated from reading ui file 'qt_des_ui/ingredientQuantityDialog.ui'
 #
 # Created by: PyQt5 UI code generator 5.14.1
 #
@@ -39,6 +39,8 @@ class Ui_ingredientQuantityDialog(object):
         self.queryInputLayout.addWidget(self.foodGroupComboBox)
         self.queryLayout.addLayout(self.queryInputLayout)
         self.resultTableWidget = QtWidgets.QTableWidget(ingredientQuantityDialog)
+        self.resultTableWidget.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.resultTableWidget.setAlternatingRowColors(True)
         self.resultTableWidget.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
         self.resultTableWidget.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
         self.resultTableWidget.setVerticalScrollMode(QtWidgets.QAbstractItemView.ScrollPerItem)
@@ -81,12 +83,14 @@ class Ui_ingredientQuantityDialog(object):
         self.horizontalLayout.addWidget(self.quantitySpinBox)
         self.unitComboBox = QtWidgets.QComboBox(ingredientQuantityDialog)
         self.unitComboBox.setMinimumSize(QtCore.QSize(200, 0))
+        self.unitComboBox.setEditable(True)
         self.unitComboBox.setObjectName("unitComboBox")
         self.horizontalLayout.addWidget(self.unitComboBox)
         self.verticalLayout_2.addLayout(self.horizontalLayout)
         spacerItem1 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout_2.addItem(spacerItem1)
         self.confirmButtonBox = QtWidgets.QDialogButtonBox(ingredientQuantityDialog)
+        self.confirmButtonBox.setEnabled(False)
         self.confirmButtonBox.setOrientation(QtCore.Qt.Horizontal)
         self.confirmButtonBox.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.confirmButtonBox.setObjectName("confirmButtonBox")

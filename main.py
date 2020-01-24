@@ -1,4 +1,5 @@
-from FreeNutrition.ingredientQuantityWindow import Ui_ingredientQuantityDialog
+from FreeNutrition.ingredientQuantityDialog import Ui_ingredientQuantityDialog
+from FreeNutrition.recipeDialog import Ui_recipeDialog
 from FreeNutrition.mainWindow import Ui_MainWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QDialog
@@ -119,6 +120,142 @@ class ingredQuantDialogLogic(QDialog, Ui_ingredientQuantityDialog):
             self.unitComboBox.addItems(measureList)
 
 
+class recipeDialogLogic(QDialog, Ui_recipeDialog):
+    def __init__(self, parent=None):
+        QDialog.__init__(self, parent)
+        self.setupUi(self)
+        # upon user entry into queryLineEdit, search database for user strings
+        self.queryLineEdit.textChanged.connect(self.loadData)
+
+        # upon user entry into foodGroupComboBox, filter database for FdGroup_Cd
+        self.loadFdGrp()
+
+        # upon user selection of item in resultTableWidget, record the selection.
+        self.resultTableWidget.itemSelectionChanged.connect(self.getWeights)
+
+
+        #self.unitComboBox.currentIndexChanged.connect(
+        self.currentNDB_No = None
+
+        self.addFoodPushButton.clicked.connect(self.addFoodButtonClicked)
+
+        # on Remove Food call, delete selected recordedFoodTableWidget entry from food_history
+        self.removeFoodPushButton.clicked.connect(self.removeFoodButtonClicked)
+       
+
+        self.recordedFoodBuffer = []
+
+        # if user has entered quantity and measurement unit, allow save. 
+        self.quantitySpinBox.valueChanged.connect(self.addFoodButtonEnable)
+        self.unitComboBox.currentIndexChanged.connect(self.addFoodButtonEnable)
+
+        self.recipeDict = {'ingredients' : [], 'servings' : 0}
+
+    def loadRecipe(self):
+        for row, ingredientData in enumerate(self.recipeDict['ingredient']):
+            for col, col_data in enumerate(ingredient)
+
+
+
+    def addFoodButtonEnable(self):
+        if self.quantitySpinBox.value() == 0.0 or self.unitComboBox.currentText() == '':
+            self.addFoodPushButton.setEnabled(False)
+        else:
+            self.addFoodPushButton.setEnabled(True)
+
+    def addFoodButtonClicked(self):
+        '''Loads ingredientQuantityDialog. Upon confirmation, saves '''
+
+
+        ingredientData = (self.currentNDB_No, 
+                            self.quantitySpinBox.value(),
+                            self.unitComboBox.currentText())
+
+        self.recipeDict['ingredients'] = ingredientData
+
+            
+    def removeFoodButtonClicked(self):
+        
+        if self.recordedFoodTableWidget.currentRow() < 0:
+            return        
+
+        deleteQuery = 'DELETE from diet_history WHERE _ROWID_ = {}'
+        recipeNDB_No = self.recordedFoodBuffer[self.recordedFoodTableWidget.currentRow()]
+        #print(self.recordedFoodTableWidget.currentRow())
+        connection = sqlite3.connect('./diet_history/diet_history.db')
+        c = connection.cursor()
+        c.execute(deleteQuery.format(str(rowID)))
+        connection.commit()
+
+        connection.close()
+
+        self.loadDietHistory()
+        
+        self.recordedFoodTableWidget.clearSelection()
+
+        #print(self.recordedFoodTableWidget.currentRow())
+
+
+    # load FdGrp_Desc
+    def loadFdGrp(self):
+        connection = sqlite3.connect('./database/sr28.db')
+        connection.text_factory = str
+        query = 'SELECT FdGrp_Desc, FdGrp_Cd FROM fd_group;'
+        result = connection.execute(query)
+
+        result = [(FdGrp_Desc[1:-1], FdGrp_Cd) for FdGrp_Desc, FdGrp_Cd in result]
+        self.FdGrpDict = dict(result)
+        self.FdGrpDict[''] = ''
+        connection.close()
+
+        self.foodGroupComboBox.addItems(sorted(self.FdGrpDict.keys()))
+
+    # connect to sr28 database
+    def loadData(self):
+        '''sr28 query is executed upon changed character string in queryLineEdit.
+        Searches the Long_Desc column for each space delimited string in queryLineEdit.
+        Implemented a hacky work around using like clauses as sqlite3 does not have a
+        REGEXP function.'''
+
+        # do not query if search box is devoid of non whitespace characters.
+        if len(self.queryLineEdit.text().strip()) == 0:
+            return
+
+        connection = sqlite3.connect('./database/sr28.db')
+        connection.text_factory = str
+
+        rawInput = self.queryLineEdit.text().strip()
+        FdGrp_Desc = str(self.foodGroupComboBox.currentText())
+
+        queryBase = 'SELECT Long_Desc,NDB_No FROM food_des WHERE '
+        likeClause = 'Long_Desc LIKE \'%{}%\''
+        clauseList = [likeClause.format(i) for i in rawInput.split()]
+
+        # filter by food group
+        FdGrpFilter = 'FdGrp_Cd == \'{}\' AND '.format(self.FdGrpDict[FdGrp_Desc])
+
+        # omit query food group condition if foodGroupCombo box is empty.
+        if len(FdGrp_Desc) != 0:
+            userQuery = queryBase + '(' + FdGrpFilter  + ' AND '.join(clauseList) + ');'
+        else:
+            userQuery = queryBase + '(' + ' AND '.join(clauseList) + ');'
+
+        result = connection.execute(userQuery)
+
+        # Save NDB_No for mapping to other tables in sr28.db
+        self.foodDesBuffer = []
+
+        self.resultTableWidget.setRowCount(0)
+        for row_number, row_data in enumerate(result):
+            self.resultTableWidget.insertRow(row_number)
+
+            self.resultTableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(row_data[0][1:-1]))
+
+            self.foodDesBuffer.append(row_data[1])
+
+        connection.close()
+
+
 class mainWindowLogic(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
         QMainWindow.__init__(self, parent)
@@ -129,6 +266,7 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
 
         # on user's change of selected day, display available diet history
         self.foodCalendarWidget.clicked.connect(self.loadDietHistory)
+        self.foodCalendarWidget.selectionChanged.connect(self.loadDietHistory)
 
         # on user's change of selected month, clear displayed diet history
         self.foodCalendarWidget.currentPageChanged.connect(self.clearDietHistory)
