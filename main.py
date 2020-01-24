@@ -25,9 +25,6 @@ class ingredQuantDialogLogic(QDialog, Ui_ingredientQuantityDialog):
         #self.unitComboBox.currentIndexChanged.connect(
         self.currentNDB_No = None
 
-
-
-
     # load FdGrp_Desc
     def loadFdGrp(self):
         connection = sqlite3.connect('./database/sr28.db')
@@ -141,7 +138,8 @@ class recipeDialogLogic(QDialog, Ui_recipeDialog):
 
         # on Remove Food call, delete selected recordedFoodTableWidget entry from food_history
         self.removeFoodPushButton.clicked.connect(self.removeFoodButtonClicked)
-       
+      
+        self.foodDesBuffer = [] 
 
         self.recordedFoodBuffer = []
 
@@ -151,11 +149,31 @@ class recipeDialogLogic(QDialog, Ui_recipeDialog):
 
         self.recipeDict = {'ingredients' : [], 'servings' : 0}
 
+        self.loadRecipe()
+
     def loadRecipe(self):
-        for row, ingredientData in enumerate(self.recipeDict['ingredient']):
-            for col, col_data in enumerate(ingredient)
+        self.recordedFoodTableWidget.setRowCount(0)
+
+        sr28Connection = sqlite3.connect('./database/sr28.db')
+        food_desQuery = 'SELECT Long_Desc FROM food_des WHERE NDB_No == \'{}\''
+
+        self.recordedFoodBuffer = []
+    
+        for row_number, ingredientData in enumerate(self.recipeDict['ingredients']):
+            self.recordedFoodTableWidget.insertRow(row_number)
+                        
+            recordedFoodVals = list(ingredientData)
+            self.recordedFoodBuffer.append(ingredientData[0])
+            sr28Result = sr28Connection.execute(food_desQuery.format(ingredientData[0]))
+            sr28Result = [i for i in sr28Result][0][0]
+            recordedFoodVals[0] = sr28Result[1:-1]
+            
+            for col_number, col_data in enumerate(recordedFoodVals):
+                self.recordedFoodTableWidget.setItem(row_number, col_number, QtWidgets.QTableWidgetItem(str(col_data)))
 
 
+        sr28Connection.close() 
+        print(self.recipeDict['ingredients'])
 
     def addFoodButtonEnable(self):
         if self.quantitySpinBox.value() == 0.0 or self.unitComboBox.currentText() == '':
@@ -171,28 +189,24 @@ class recipeDialogLogic(QDialog, Ui_recipeDialog):
                             self.quantitySpinBox.value(),
                             self.unitComboBox.currentText())
 
-        self.recipeDict['ingredients'] = ingredientData
-
+        self.recipeDict['ingredients'].append(ingredientData)
+        self.currentNDB_No = None
+        self.loadRecipe()
+        self.quantitySpinBox.setValue(0)
+        self.unitComboBox.setCurrentIndex(0)
             
     def removeFoodButtonClicked(self):
         
         if self.recordedFoodTableWidget.currentRow() < 0:
-            return        
-
-        deleteQuery = 'DELETE from diet_history WHERE _ROWID_ = {}'
-        recipeNDB_No = self.recordedFoodBuffer[self.recordedFoodTableWidget.currentRow()]
-        #print(self.recordedFoodTableWidget.currentRow())
-        connection = sqlite3.connect('./diet_history/diet_history.db')
-        c = connection.cursor()
-        c.execute(deleteQuery.format(str(rowID)))
-        connection.commit()
-
-        connection.close()
-
-        self.loadDietHistory()
+            return
+        if self.recordedFoodTableWidget.currentRow() > len(self.recipeDict['ingredients']):
+            print(self.recordedFoodTableWidget.currentRow(), self.recipeDict)
+            return
+             
+        self.recipeDict['ingredients'].pop(self.recordedFoodTableWidget.currentRow())
         
         self.recordedFoodTableWidget.clearSelection()
-
+        self.loadRecipe()
         #print(self.recordedFoodTableWidget.currentRow())
 
 
@@ -255,6 +269,38 @@ class recipeDialogLogic(QDialog, Ui_recipeDialog):
 
         connection.close()
 
+    def getWeights(self):
+        '''list available measurements of selected row in resultTableWidget
+        pull rows from weight table where NDB_No matches.
+        send available measurements to unitComboBox.
+        test for cases where NDB_No is not found in weight table.'''
+
+        self.unitComboBox.clear()
+
+        # ugly. should build in innate behaviorial fix rather than error catching.
+        try:
+            self.currentNDB_No = self.foodDesBuffer[ self.resultTableWidget.currentRow() ]
+        except:
+            # print(self.foodDesBuffer, self.resultTableWidget.currentRow())
+            return
+
+        connection = sqlite3.connect('./database/sr28.db')
+        connection.text_factory = str
+
+        query = 'SELECT  Msre_Desc FROM weight WHERE NDB_No == \'{}\';'
+        result  = connection.execute(query.format(self.currentNDB_No))
+
+        measureList = ['']
+        for i in result:
+            measureList.append(i[0][1:-1])
+
+        connection.close()
+        if len(measureList) == 1:
+            self.unitComboBox.addItems(['gram'])
+        else:
+            self.unitComboBox.addItems(measureList)
+
+
 
 class mainWindowLogic(QMainWindow, Ui_MainWindow):
     def __init__(self, parent=None):
@@ -277,9 +323,24 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
         # on Remove Food call, delete selected recordedFoodTableWidget entry from food_history
         self.removeFoodPushButton.clicked.connect(self.removeFoodButtonClicked)
         
-    
-        self.addFoodDialog = None
 
+        # on create new recipe, open recipeDialog
+        self.newRecipePushButton.clicked.connect(self.openRecipeDialog)
+ 
+        self.addFoodDialog = None
+        self.openRecipeDialog = None
+
+
+    def openRecipeDialog(self):
+        if self.openRecipeDialog is not None:
+            return
+
+        self.openRecipeDialog = recipeDialogLogic()
+        self.openRecipeDialog.show()
+
+        rsp = self.openRecipeDialog.exec_()
+
+        self.openRecipeDialog = None
 
     def addFoodButtonClicked(self):
         '''Loads ingredientQuantityDialog. Upon confirmation, saves '''
