@@ -21,7 +21,7 @@ class ingredQuantDialogLogic(QDialog, Ui_ingredientQuantityDialog):
         # disable table editability
         self.resultTableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
 
-        self.unitComboBox.currentIndexChanged.connect(self.unitComboBox.currentText)
+        #self.unitComboBox.currentIndexChanged.connect(
         self.currentNDB_No = None
 
 
@@ -137,11 +137,17 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
 
         # on Add Food call, open ingredientQuantityDialog
         self.addFoodPushButton.clicked.connect(self.addFoodButtonClicked)
+    
+        self.addFoodDialog = None
 
 
     def addFoodButtonClicked(self):
         '''Loads ingredientQuantityDialog. Upon confirmation, saves '''
+
+        if self.addFoodDialog is not None:
+            return
         
+        entryDate = self.foodCalendarWidget.selectedDate().toString('yyyy-MM-dd')
         self.addFoodDialog = ingredQuantDialogLogic()
         self.addFoodDialog.show()
 
@@ -149,42 +155,70 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
 
         if rsp == QtWidgets.QDialog.Accepted:
             #self.addFoodDialog.time, self.addFoodDialog.currentNDB_No, self.addFoodDialog.quantity, self.addFoodDialog.units.
-            print(self.addFoodDialog.currentNDB_No)
-            
-            insertData = 'INSERT INTO diet_history'
+            diet_historyEntry = (entryDate,
+                                    self.addFoodDialog.consumptionTimeEdit.time().toString('hh:mm AP'), 
+                                    self.addFoodDialog.currentNDB_No, 
+                                    self.addFoodDialog.quantitySpinBox.value(),
+                                    self.addFoodDialog.unitComboBox.currentText())
 
+            
+
+            insertData = 'INSERT INTO diet_history (Date, Time, NDB_No, Quantity, Units) VALUES  (?,?,?,?,?)'
             connection = sqlite3.connect('./diet_history/diet_history.db')
-            
+            c = connection.cursor()
+            c.execute(insertData, diet_historyEntry)
+            connection.commit()
+            connection.close()
+            self.loadDietHistory()
+     
+        self.addFoodDialog = None
 
+    def removeFoodButtonClicked(self):
+        
+        if self.addFoodDialog is not None:
+            return
 
+        
 
 
     def loadDietHistory(self):
         '''Queries user diet history for date displayed on foodCalendarWidget.
         diet_history.db contains columns Date, Time, NDB_No, Quantity, Units.
         diet_history.db will be created if none exists.'''
-        createTable = 'CREATE TABLE IF NOT EXISTS diet_history (Date TEXT, Time TEXT, NDB_No TEXT, Quantity REAL, Units TEXT);'
-        connection = sqlite3.connect('./diet_history/diet_history.db')
-        connection.execute(createTable)
 
-        queryBase = 'SELECT * FROM diet_history WHERE Date == \'{}\''
+        self.recordedFoodTableWidget.setRowCount(0)
+        createTable = 'CREATE TABLE IF NOT EXISTS diet_history (Date TEXT, Time TEXT, NDB_No TEXT, Quantity REAL, Units TEXT);'
+        diet_historyConnection = sqlite3.connect('./diet_history/diet_history.db')
+        diet_historyConnection.execute(createTable)
+
+        queryBase = 'SELECT _ROWID_,* FROM diet_history WHERE Date == \'{}\''
         queryQDate = self.foodCalendarWidget.selectedDate()
         queryDate = queryQDate.toString('yyyy-MM-dd')
         query = queryBase.format(queryDate)
-        result = connection.execute(query)
+        diet_historyResult = diet_historyConnection.execute(query)
+
+        
+        sr28Connection = sqlite3.connect('./database/sr28.db')
+        food_desQuery = 'SELECT Long_Desc FROM food_des WHERE NDB_No == \'{}\''
 
         self.dietHistoryBuffer = []
-
-        for row_number, row_data in enumerate(result):
+    
+        for row_number, row_data in enumerate(diet_historyResult):
             self.recordedFoodTableWidget.insertRow(row_number)
 
-            self.resultTableWidget.setItem(row_number, 0, QtWidgets.QTableWidgetItem(row_data[0][1:-1]))
+            recordedFoodVals = list(row_data[2:])
+            self.dietHistoryBuffer.append(row_data[0])
+            sr28Result = sr28Connection.execute(food_desQuery.format(row_data[3]))
+            sr28Result = [i for i in sr28Result][0][0]
+            recordedFoodVals[1] = sr28Result[1:-1]
 
-            self.foodDesBuffer.append(row_data[1])
+            for col_number, col_data in enumerate(recordedFoodVals):
+                self.recordedFoodTableWidget.setItem(row_number, col_number, QtWidgets.QTableWidgetItem(str(col_data)))
 
+            #self.foodDesBuffer.append(row_data[1])
 
-        connection.close()
-        print(queryDate)
+        sr28Connection.close()
+        diet_historyConnection.close()
 
 
     def clearDietHistory(self):
@@ -193,7 +227,7 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
         self.dietHistoryBuffer = []
         self.recordedFoodTableWidget.setRowCount(0)
 
-
+    
         
 
 if __name__ == '__main__':
