@@ -34,14 +34,14 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_2">
         <item>
-         <widget class="QPushButton" name="removeFoodPushButton">
+         <widget class="QPushButton" name="addFoodPushButton">
           <property name="text">
            <string>Add Food</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="addFoodPushButton">
+         <widget class="QPushButton" name="removeFoodPushButton">
           <property name="text">
            <string>Remove Food </string>
           </property>

@@ -6,11 +6,22 @@
 #
 # WARNING! All changes made in this file will be lost!
 
-
+from ingredientQuantityWindow import Ui_ingredientQuantityDialog
 from PyQt5 import QtCore, QtGui, QtWidgets
 import sqlite3
 
 class Ui_MainWindow(object):
+
+    def addFoodButtonClicked(self):
+        import sys
+        app = QtWidgets.QApplication(sys.argv)
+        ingredientQuantityDialog = QtWidgets.QDialog()
+        ui = Ui_ingredientQuantityDialog()
+        ui.setupUi(ingredientQuantityDialog)
+        ingredientQuantityDialog.show()
+        ingredientQuantityDialog.exec_()
+
+
     def loadDietHistory(self):
         '''Queries user diet history for date displayed on foodCalendarWidget.
         diet_history.db contains columns Date, Time, NDB_No, Quantity, Units.
@@ -38,11 +49,13 @@ class Ui_MainWindow(object):
         connection.close()
         print(queryDate)
 
+
     def clearDietHistory(self):
         '''Removes displayed rows in recordedFoodTableWidget'''
 
         self.dietHistoryBuffer = []
         self.recordedFoodTableWidget.setRowCount(0)
+
 
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
@@ -63,12 +76,13 @@ class Ui_MainWindow(object):
         self.foodRecordLayout.addWidget(self.label)
         self.horizontalLayout_2 = QtWidgets.QHBoxLayout()
         self.horizontalLayout_2.setObjectName("horizontalLayout_2")
-        self.removeFoodPushButton = QtWidgets.QPushButton(self.centralwidget)
-        self.removeFoodPushButton.setObjectName("removeFoodPushButton")
-        self.horizontalLayout_2.addWidget(self.removeFoodPushButton)
         self.addFoodPushButton = QtWidgets.QPushButton(self.centralwidget)
         self.addFoodPushButton.setObjectName("addFoodPushButton")
         self.horizontalLayout_2.addWidget(self.addFoodPushButton)
+        self.removeFoodPushButton = QtWidgets.QPushButton(self.centralwidget)
+        self.removeFoodPushButton.setObjectName("removeFoodPushButton")
+        self.horizontalLayout_2.addWidget(self.removeFoodPushButton)
+ 
         self.foodRecordLayout.addLayout(self.horizontalLayout_2)
         self.recordedFoodTableWidget = QtWidgets.QTableWidget(self.centralwidget)
         self.recordedFoodTableWidget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustIgnored)
@@ -170,6 +184,9 @@ class Ui_MainWindow(object):
         # on user's change of selected month, clear displayed diet history
         self.foodCalendarWidget.currentPageChanged.connect(self.clearDietHistory)
 
+        # on Add Food call, open ingredientQuantityDialog
+        self.addFoodPushButton.clicked.connect(self.addFoodButtonClicked)
+
         self.retranslateUi(MainWindow)
         self.actionExit.triggered.connect(MainWindow.close)
         QtCore.QMetaObject.connectSlotsByName(MainWindow)
@@ -178,8 +195,8 @@ class Ui_MainWindow(object):
         _translate = QtCore.QCoreApplication.translate
         MainWindow.setWindowTitle(_translate("MainWindow", "MainWindow"))
         self.label.setText(_translate("MainWindow", "Daily Food Record:"))
-        self.removeFoodPushButton.setText(_translate("MainWindow", "Add Food"))
-        self.addFoodPushButton.setText(_translate("MainWindow", "Remove Food "))
+        self.removeFoodPushButton.setText(_translate("MainWindow", "Remove Food"))
+        self.addFoodPushButton.setText(_translate("MainWindow", "Add Food"))
         item = self.recordedFoodTableWidget.horizontalHeaderItem(0)
         item.setText(_translate("MainWindow", "Time"))
         item = self.recordedFoodTableWidget.horizontalHeaderItem(1)
