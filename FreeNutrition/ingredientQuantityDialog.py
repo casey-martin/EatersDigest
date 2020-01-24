@@ -79,6 +79,7 @@ class Ui_ingredientQuantityDialog(object):
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.quantitySpinBox = QtWidgets.QDoubleSpinBox(ingredientQuantityDialog)
         self.quantitySpinBox.setMaximumSize(QtCore.QSize(100, 16777215))
+        self.quantitySpinBox.setMaximum(9001.0)
         self.quantitySpinBox.setObjectName("quantitySpinBox")
         self.horizontalLayout.addWidget(self.quantitySpinBox)
         self.unitComboBox = QtWidgets.QComboBox(ingredientQuantityDialog)

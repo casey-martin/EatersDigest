@@ -98,6 +98,7 @@ class Ui_recipeDialog(object):
         self.gridLayout.addWidget(self.label, 0, 2, 1, 1)
         self.quantitySpinBox = QtWidgets.QDoubleSpinBox(recipeDialog)
         self.quantitySpinBox.setMaximumSize(QtCore.QSize(100, 16777215))
+        self.quantitySpinBox.setMaximum(9001.0)
         self.quantitySpinBox.setObjectName("quantitySpinBox")
         self.gridLayout.addWidget(self.quantitySpinBox, 1, 0, 1, 1)
         spacerItem2 = QtWidgets.QSpacerItem(40, 20, QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum)
