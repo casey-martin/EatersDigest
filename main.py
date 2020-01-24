@@ -2,7 +2,10 @@ from FreeNutrition.ingredientQuantityDialog import Ui_ingredientQuantityDialog
 from FreeNutrition.recipeDialog import Ui_recipeDialog
 from FreeNutrition.mainWindow import Ui_MainWindow
 from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5 import Qt as qt
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QDialog
+import os
+import json
 import sqlite3
 import sys
 
@@ -22,8 +25,20 @@ class ingredQuantDialogLogic(QDialog, Ui_ingredientQuantityDialog):
         # disable table editability
         self.resultTableWidget.setEditTriggers(QtWidgets.QTableWidget.NoEditTriggers)
 
-        #self.unitComboBox.currentIndexChanged.connect(
+        # self.unitComboBox.currentIndexChanged.connect(
         self.currentNDB_No = None
+
+
+        # enable confirmation once required data has been input.
+        self.quantitySpinBox.valueChanged.connect(self.enableConfirmButtonBox)
+        self.unitComboBox.currentIndexChanged.connect(self.enableConfirmButtonBox)
+
+
+    def enableConfirmButtonBox(self):
+        if self.quantitySpinBox.value() == 0 or self.unitComboBox.currentText() == "":
+            self.confirmButtonBox.setEnabled(False)
+        else:
+            self.confirmButtonBox.setEnabled(True)
 
     # load FdGrp_Desc
     def loadFdGrp(self):
@@ -131,7 +146,6 @@ class recipeDialogLogic(QDialog, Ui_recipeDialog):
         self.resultTableWidget.itemSelectionChanged.connect(self.getWeights)
 
 
-        #self.unitComboBox.currentIndexChanged.connect(
         self.currentNDB_No = None
 
         self.addFoodPushButton.clicked.connect(self.addFoodButtonClicked)
@@ -147,9 +161,26 @@ class recipeDialogLogic(QDialog, Ui_recipeDialog):
         self.quantitySpinBox.valueChanged.connect(self.addFoodButtonEnable)
         self.unitComboBox.currentIndexChanged.connect(self.addFoodButtonEnable)
 
-        self.recipeDict = {'ingredients' : [], 'servings' : 0}
+
+        # if user has saved an ingredient, recipe name, and serving size, enable save button
+        self.servingSizeSpinBox.valueChanged.connect(self.enableSaveRecipePushButton)
+        self.recipeNameLineEdit.textChanged.connect(self.enableSaveRecipePushButton)
+
+        # color widgets that have missing data.
+        #self.recipeNameLineEdit.setAttribute(qt.Qt.WA_StyledBackground,True)
+        #self.recipeNameLineEdit.setStyleSheet("QLineEdit {background-color: rgb(255, 255, 255)}")
+        #)recipeNameLineEdit->setStyleSheet('background-color: pink')
+        
+
+        self.saveRecipePushButton.clicked.connect(self.saveRecipe)
+        self.ingredientDict = {'ingredients' : [], 'servings' : 0}
 
         self.loadRecipe()
+
+
+#    def saveRecipe(self):
+ 
+ 
 
     def loadRecipe(self):
         self.recordedFoodTableWidget.setRowCount(0)
@@ -159,7 +190,7 @@ class recipeDialogLogic(QDialog, Ui_recipeDialog):
 
         self.recordedFoodBuffer = []
     
-        for row_number, ingredientData in enumerate(self.recipeDict['ingredients']):
+        for row_number, ingredientData in enumerate(self.ingredientDict['ingredients']):
             self.recordedFoodTableWidget.insertRow(row_number)
                         
             recordedFoodVals = list(ingredientData)
@@ -173,7 +204,12 @@ class recipeDialogLogic(QDialog, Ui_recipeDialog):
 
 
         sr28Connection.close() 
-        print(self.recipeDict['ingredients'])
+        print(self.ingredientDict['ingredients'])
+
+
+    def saveRecipe(self):
+        self.recipeDict = {self.recipeNameLineEdit.text() : {'ingredients':self.ingredientDict['ingredients'], 
+                                                             'serving size':self.servingSizeSpinBox.value()}}
 
     def addFoodButtonEnable(self):
         if self.quantitySpinBox.value() == 0.0 or self.unitComboBox.currentText() == '':
@@ -189,21 +225,27 @@ class recipeDialogLogic(QDialog, Ui_recipeDialog):
                             self.quantitySpinBox.value(),
                             self.unitComboBox.currentText())
 
-        self.recipeDict['ingredients'].append(ingredientData)
+        self.ingredientDict['ingredients'].append(ingredientData)
         self.currentNDB_No = None
         self.loadRecipe()
         self.quantitySpinBox.setValue(0)
         self.unitComboBox.setCurrentIndex(0)
-            
+
+    def enableSaveRecipePushButton(self):
+        if self.resultTableWidget.rowCount() < 1 or self.servingSizeSpinBox == 0.0 or self.recipeNameLineEdit.text() == '':
+            self.saveRecipePushButton.setEnabled(False)
+        else:
+            self.saveRecipePushButton.setEnabled(True)
+ 
     def removeFoodButtonClicked(self):
         
         if self.recordedFoodTableWidget.currentRow() < 0:
             return
-        if self.recordedFoodTableWidget.currentRow() > len(self.recipeDict['ingredients']):
-            print(self.recordedFoodTableWidget.currentRow(), self.recipeDict)
+        if self.recordedFoodTableWidget.currentRow() > len(self.ingredientDict['ingredients']):
+            print(self.recordedFoodTableWidget.currentRow(), self.ingredientDict)
             return
              
-        self.recipeDict['ingredients'].pop(self.recordedFoodTableWidget.currentRow())
+        self.ingredientDict['ingredients'].pop(self.recordedFoodTableWidget.currentRow())
         
         self.recordedFoodTableWidget.clearSelection()
         self.loadRecipe()
@@ -326,6 +368,8 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
 
         # on create new recipe, open recipeDialog
         self.newRecipePushButton.clicked.connect(self.openRecipeDialog)
+
+        self.loadRecipes()
  
         self.addFoodDialog = None
         self.openRecipeDialog = None
@@ -340,7 +384,32 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
 
         rsp = self.openRecipeDialog.exec_()
 
+        fileCount = len(os.listdir('./recipes'))
+
+        if rsp == QtWidgets.QDialog.Accepted:
+            #print(self.openRecipeDialog.recipeDict)
+            j = json.dumps(self.openRecipeDialog.recipeDict, indent=4)
+            f = open('./recipes/recipe_{}.json'.format(fileCount), 'w')
+            print >> f, j 
+            f.close()
+
+            self.loadRecipes()
+
         self.openRecipeDialog = None
+
+    def loadRecipes(self):
+        self.recipeListWidget.clear()
+        
+        recipes = [posJson for posJson in os.listdir('./recipes')]
+        self.recipeList = []
+        for entry in recipes:
+            with open('./recipes/' + entry) as f:
+                self.recipeList.append(json.load(f))
+
+        for row, entry in enumerate(self.recipeList):
+            self.recipeListWidget.addItem(entry.keys()[0])
+
+            
 
     def addFoodButtonClicked(self):
         '''Loads ingredientQuantityDialog. Upon confirmation, saves '''
@@ -394,6 +463,12 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
         self.recordedFoodTableWidget.clearSelection()
 
         #print(self.recordedFoodTableWidget.currentRow())
+
+    def deleteRecipe(self):
+        if self.recipeListWidget.currentRow() < 1:
+            return
+
+        
 
     def loadDietHistory(self):
         '''Queries user diet history for date displayed on foodCalendarWidget.

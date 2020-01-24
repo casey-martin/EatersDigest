@@ -13,6 +13,9 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
   <layout class="QHBoxLayout" name="horizontalLayout">
    <item>
     <layout class="QVBoxLayout" name="queryLayout">
@@ -25,7 +28,16 @@
          <bold>true</bold>
         </font>
        </property>
+       <property name="autoFillBackground">
+        <bool>true</bool>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background-color: rgb(255, 255, 255)</string>
+       </property>
        <property name="text">
+        <string/>
+       </property>
+       <property name="placeholderText">
         <string>Recipe Name</string>
        </property>
       </widget>
@@ -399,19 +411,35 @@
       </spacer>
      </item>
      <item>
-      <widget class="QPushButton" name="saveRecipePushButton">
-       <property name="enabled">
-        <bool>false</bool>
+      <widget class="QLabel" name="servingSizeLabel_2">
+       <property name="font">
+        <font>
+         <pointsize>12</pointsize>
+         <weight>75</weight>
+         <bold>true</bold>
+        </font>
+       </property>
+       <property name="frameShape">
+        <enum>QFrame::NoFrame</enum>
+       </property>
+       <property name="frameShadow">
+        <enum>QFrame::Plain</enum>
        </property>
        <property name="text">
-        <string>Save Recipe</string>
+        <string>Save Recipe:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QPushButton" name="cancelRecipePushButton">
-       <property name="text">
-        <string>Cancel</string>
+      <widget class="QDialogButtonBox" name="saveRecipePushButton">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="standardButtons">
+        <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
        </property>
       </widget>
      </item>
@@ -433,5 +461,38 @@
   </layout>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>saveRecipePushButton</sender>
+   <signal>accepted()</signal>
+   <receiver>recipeDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>958</x>
+     <y>380</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>539</x>
+     <y>336</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>saveRecipePushButton</sender>
+   <signal>rejected()</signal>
+   <receiver>recipeDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>958</x>
+     <y>380</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>539</x>
+     <y>336</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

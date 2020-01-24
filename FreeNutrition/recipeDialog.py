@@ -2,18 +2,17 @@
 
 # Form implementation generated from reading ui file 'qt_des_ui/recipeDialog.ui'
 #
-# Created by: PyQt5 UI code generator 5.14.1
+# Created by: PyQt5 UI code generator 5.6
 #
 # WARNING! All changes made in this file will be lost!
 
-
 from PyQt5 import QtCore, QtGui, QtWidgets
-
 
 class Ui_recipeDialog(object):
     def setupUi(self, recipeDialog):
         recipeDialog.setObjectName("recipeDialog")
         recipeDialog.resize(1079, 673)
+        recipeDialog.setStyleSheet("")
         self.horizontalLayout = QtWidgets.QHBoxLayout(recipeDialog)
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.queryLayout = QtWidgets.QVBoxLayout()
@@ -24,6 +23,9 @@ class Ui_recipeDialog(object):
         font.setBold(True)
         font.setWeight(75)
         self.recipeNameLineEdit.setFont(font)
+        self.recipeNameLineEdit.setAutoFillBackground(True)
+        self.recipeNameLineEdit.setStyleSheet("background-color: rgb(255, 255, 255)")
+        self.recipeNameLineEdit.setText("")
         self.recipeNameLineEdit.setObjectName("recipeNameLineEdit")
         self.queryLayout.addWidget(self.recipeNameLineEdit)
         self.line_3 = QtWidgets.QFrame(recipeDialog)
@@ -184,24 +186,35 @@ class Ui_recipeDialog(object):
         self.verticalLayout.addWidget(self.servingSizeSpinBox)
         spacerItem5 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem5)
-        self.saveRecipePushButton = QtWidgets.QPushButton(recipeDialog)
+        self.servingSizeLabel_2 = QtWidgets.QLabel(recipeDialog)
+        font = QtGui.QFont()
+        font.setPointSize(12)
+        font.setBold(True)
+        font.setWeight(75)
+        self.servingSizeLabel_2.setFont(font)
+        self.servingSizeLabel_2.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.servingSizeLabel_2.setFrameShadow(QtWidgets.QFrame.Plain)
+        self.servingSizeLabel_2.setObjectName("servingSizeLabel_2")
+        self.verticalLayout.addWidget(self.servingSizeLabel_2)
+        self.saveRecipePushButton = QtWidgets.QDialogButtonBox(recipeDialog)
         self.saveRecipePushButton.setEnabled(False)
+        self.saveRecipePushButton.setOrientation(QtCore.Qt.Vertical)
+        self.saveRecipePushButton.setStandardButtons(QtWidgets.QDialogButtonBox.Cancel|QtWidgets.QDialogButtonBox.Ok)
         self.saveRecipePushButton.setObjectName("saveRecipePushButton")
         self.verticalLayout.addWidget(self.saveRecipePushButton)
-        self.cancelRecipePushButton = QtWidgets.QPushButton(recipeDialog)
-        self.cancelRecipePushButton.setObjectName("cancelRecipePushButton")
-        self.verticalLayout.addWidget(self.cancelRecipePushButton)
         spacerItem6 = QtWidgets.QSpacerItem(20, 40, QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding)
         self.verticalLayout.addItem(spacerItem6)
         self.horizontalLayout.addLayout(self.verticalLayout)
 
         self.retranslateUi(recipeDialog)
+        self.saveRecipePushButton.accepted.connect(recipeDialog.accept)
+        self.saveRecipePushButton.rejected.connect(recipeDialog.reject)
         QtCore.QMetaObject.connectSlotsByName(recipeDialog)
 
     def retranslateUi(self, recipeDialog):
         _translate = QtCore.QCoreApplication.translate
         recipeDialog.setWindowTitle(_translate("recipeDialog", "Dialog"))
-        self.recipeNameLineEdit.setText(_translate("recipeDialog", "Recipe Name"))
+        self.recipeNameLineEdit.setPlaceholderText(_translate("recipeDialog", "Recipe Name"))
         self.label_3.setText(_translate("recipeDialog", "Search for Foods:"))
         self.resultTableWidget.setSortingEnabled(True)
         item = self.resultTableWidget.horizontalHeaderItem(0)
@@ -218,8 +231,7 @@ class Ui_recipeDialog(object):
         item = self.recordedFoodTableWidget.horizontalHeaderItem(2)
         item.setText(_translate("recipeDialog", "Units"))
         self.servingSizeLabel.setText(_translate("recipeDialog", "Recipe Serving Size"))
-        self.saveRecipePushButton.setText(_translate("recipeDialog", "Save Recipe"))
-        self.cancelRecipePushButton.setText(_translate("recipeDialog", "Cancel"))
+        self.servingSizeLabel_2.setText(_translate("recipeDialog", "Save Recipe:"))
 
 
 if __name__ == "__main__":
@@ -230,3 +242,4 @@ if __name__ == "__main__":
     ui.setupUi(recipeDialog)
     recipeDialog.show()
     sys.exit(app.exec_())
+
