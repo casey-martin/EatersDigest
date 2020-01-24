@@ -111,8 +111,6 @@ class ingredQuantDialogLogic(QDialog, Ui_ingredientQuantityDialog):
         measureList = ['']
         for i in result:
             measureList.append(i[0][1:-1])
-        if len(measureList) == 1:
-            print(self.currentNDB_No)
 
         connection.close()
         if len(measureList) == 1:
@@ -137,6 +135,10 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
 
         # on Add Food call, open ingredientQuantityDialog
         self.addFoodPushButton.clicked.connect(self.addFoodButtonClicked)
+
+        # on Remove Food call, delete selected recordedFoodTableWidget entry from food_history
+        self.removeFoodPushButton.clicked.connect(self.removeFoodButtonClicked)
+        
     
         self.addFoodDialog = None
 
@@ -175,11 +177,24 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
 
     def removeFoodButtonClicked(self):
         
-        if self.addFoodDialog is not None:
-            return
+        if self.addFoodDialog is not None or self.dietHistoryBuffer == [] or self.recordedFoodTableWidget.currentRow() < 0:
+            return        
 
+        deleteQuery = 'DELETE from diet_history WHERE _ROWID_ = {}'
+        rowID = self.dietHistoryBuffer[self.recordedFoodTableWidget.currentRow()]
+        #print(self.recordedFoodTableWidget.currentRow())
+        connection = sqlite3.connect('./diet_history/diet_history.db')
+        c = connection.cursor()
+        c.execute(deleteQuery.format(str(rowID)))
+        connection.commit()
+
+        connection.close()
+
+        self.loadDietHistory()
         
+        self.recordedFoodTableWidget.clearSelection()
 
+        #print(self.recordedFoodTableWidget.currentRow())
 
     def loadDietHistory(self):
         '''Queries user diet history for date displayed on foodCalendarWidget.
@@ -211,11 +226,10 @@ class mainWindowLogic(QMainWindow, Ui_MainWindow):
             sr28Result = sr28Connection.execute(food_desQuery.format(row_data[3]))
             sr28Result = [i for i in sr28Result][0][0]
             recordedFoodVals[1] = sr28Result[1:-1]
-
+            
             for col_number, col_data in enumerate(recordedFoodVals):
                 self.recordedFoodTableWidget.setItem(row_number, col_number, QtWidgets.QTableWidgetItem(str(col_data)))
 
-            #self.foodDesBuffer.append(row_data[1])
 
         sr28Connection.close()
         diet_historyConnection.close()
